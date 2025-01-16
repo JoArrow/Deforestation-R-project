@@ -2,6 +2,7 @@
 title: "Deforestation_Brazil"
 output: html_document
 date: "2025-01-16"
+authors: uhrpv, ugfnr, uctiw
 ---
 
 Hypothesen:
@@ -9,7 +10,23 @@ Hypothesen:
 - TODO: Brandrodung in Brasilien nimmt Anteilig zum Netloss zum -> Barchart mit Anteilen
 - 
 
-Daten werden eingelesen
+In diesem R Datenanalyse - Projekt wurden die Datensätze "Global Deforestation" und 
+"Global Surface Temperatures" betrachtet. Beide sind im Github Repository "tidytuesday" zugänglich.  
+Hier der Link zu beiden Datensätzen: 
+https://github.com/rfordatascience/tidytuesday/tree/main/data/2021/2021-04-06
+https://github.com/rfordatascience/tidytuesday/blob/main/data/2023/2023-07-11/readme.md
+
+Zunächst wird das "Deforestation" Datenpaket betrachtet. Dieser thematisiert die Abholzung von Waldflächen national und international während der Jahre 2001 - 2013. Die dabei in Brasilien abfallenden Abholzungsflächen werden separat in der Datei "brazilian_loss.csv" angebenen. Diese wurde im Zuge des Projekts besonders intensiv analysiert, da der Regenwald sich zu großen Anteilen durch Brasilien erstreckt. Er wird umgangssprachlich oft als "Lunge der Welt" bezeichnet, und viele Umweltwissenschaftler*innen kritisieren seine Abholzung scharf, da dadurch ein wichtiger Faktor in der Stabilisierung des globalen Klimas verloren gehen soll. 
+Um diese Hypothese zu überprüfen, wird neben "Deforestation" auch das Datenpaket "Global Surface Temperatures" betrachtet. Dieses gibt die Temperaturänderungen weltweit und in verschiedenen Breitengraden von 1880 bis zu den letzten Jahren an und bezieht die Angabe der Änderung auf ein Mittel der globalen Temperaturen von 1951 - 1980. 
+
+<....> 
+Die Intention dieses Projekts ist die Überprüfung dieser Aussage anhand der Betrachtung der Abholzung in Brasilien während der Jahre 2001 - 2013. 
+
+Neben allen anderen Gründen der Abholzung in Brasilien ist die Brandrodung wegen der bei den Verbrennungsprozessen ausgestoßenen hohen CO2 - Anteilen eine der umwelttechnisch wohl schädlichsten Methoden. Deswegen soll in diesem Projekt des Weiteren untersucht werden, ob dieser Prozess der Landgewinnung im Regenwald in den letzten Jahren ab- oder zugenommen hat.
+
+Dieses Dokument soll einen Überblick darüber geben, auf welche Art und Weise die besagten Datensätze in R analysiert wurden und welche Schlüsse bezüglich der genannten Hypothesen gezogen wurden. 
+
+Zunächst sollen beide Datensätze in R eingelesen werden: 
 ```{r}
 library(ggplot2)
 library(scales)
