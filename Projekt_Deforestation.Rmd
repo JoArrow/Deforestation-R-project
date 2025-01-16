@@ -189,9 +189,8 @@ ggplot(data = merged_data, aes(x = year)) +
 
 ```{r}
 # Berechne die Korrelation zwischen Net_Loss und 24S-EQU
-correlation <- cor(merged_data$Net_Loss, merged_data$`24S-EQU`, use = "complete.obs")
-correlation
+correlation_pearson <- cor(merged_data$Net_Loss, merged_data$`24S-EQU`, method = "pearson", use = "complete.obs")
+correlation_pearson
 ```
-TODO: Interpret the results of the correlation test. 
-Is there no significant correlation between temperature anomaly in the 24S-EQU region and net loss in Brazil over time.
-
+Based on the data, we can not conclude that there is a significant correlation between the temperature anomaly in the 24S-EQU region and net loss in Brazil over time. 
+This lack of significant correlation might be due to the limited temporal scope of the data. Expanding the temporal scope or considering additional factors might provide more insights into the relationship between these variables.
