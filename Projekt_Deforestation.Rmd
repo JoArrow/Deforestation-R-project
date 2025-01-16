@@ -4,7 +4,18 @@ output: html_document
 date: "2025-01-16"
 ---
 
+# Einführender Text
+# TODO: Explorative Analyse zu Abholzung
+# TODO: Explorative Analyse zu Temperaturdaten
+# Hypothesen aufstellen und testen
+# - Korrelation von Abholzung in Brasilien - Temperaturdaten
+# - ?
+
 Daten werden eingelesen
+```{r}
+library(ggplot2)
+library(scales)
+```
 
 ```{r setup, include=FALSE}
 # Installiere und lade benötigte Pakete
@@ -74,6 +85,7 @@ ggplot(brazil_loss, aes(x = year, y = Net_Loss)) +
 
 
 
+
 ```{r setup, include=FALSE}
 # Selektiere die Spalten "year" und "24S-EQU" aus der zonann_temps Tabelle
 temps <- zonann_temps %>%
@@ -85,6 +97,8 @@ temps <- temps %>%
 merged_data <- inner_join(temps, brazil_loss_net, by = "year")
 merged_data
 ```
+
+How does the temperature anomaly in the 24S-EQU region compare to the global temperature anomaly over time? Let's visualize this comparison using a line plot.
 
 ```{r}
 library(ggplot2)
@@ -110,18 +124,54 @@ ggplot(data = merged_data, aes(x = year)) +
   )
 ```
 
-```{r}
 # Plot the columns 24S-EQU and Net_Loss against year with two y-axes
+
+```{r}
+library(ggplot2)
+library(scales)
+
+# Create a plot with two y-axes
 ggplot(data = merged_data, aes(x = year)) +
   geom_line(aes(y = `24S-EQU`, color = "24S-EQU"), size = 1) +
-  geom_line(aes(y = Net_Loss / 1000, color = "Net_Loss"), size = 1, linetype = "dashed") + # Scale Net_Loss for better visualization
+  geom_line(aes(y = Net_Loss / 1000000, color = "Net_Loss"), size = 1, linetype = "dashed") +
   scale_y_continuous(
-    name = "Temperature Anomaly (°C)",
-    sec.axis = sec_axis(~ . * 1000, name = "Net Loss (in Hectares)")
+    name = "Temperature in 24S-EQU (°C)",
+    sec.axis = sec_axis(~ . * 1000000, name = "Net Loss (in Hectares)")
   ) +
-  scale_color_manual(values = c("24S-EQU" = "blue", "Net_Loss" = "green")) +
+  scale_color_manual(values = c("24S-EQU" = "blue", "Net_Loss" = "brown")) +
   labs(title = "24S-EQU Temperature Anomaly and Net Loss Over Time",
-       subtitle = "Comparing 24S-EQU Temperature Anomaly and Net Loss",
+       x = "Year",
+       color = "Legend") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title.y = element_text(color = "blue", size = 14),
+    axis.title.y.right = element_text(color = "brown", size = 14),
+    axis.text.y.right = element_text(color = "brown"),
+    axis.text.y = element_text(color = "blue")
+  )
+```
+
+```{r}
+max_temp <- max(merged_data$`24S-EQU`, na.rm = TRUE)
+max_loss <- max(merged_data$Net_Loss, na.rm = TRUE)
+
+merged_data <- merged_data %>%
+  mutate(
+    norm_24S_EQU = `24S-EQU` / max_temp,
+    norm_Net_Loss = Net_Loss / max_loss
+  )
+
+ggplot(data = merged_data, aes(x = year)) +
+  geom_line(aes(y = norm_24S_EQU, color = "24S-EQU"), size = 1) +
+  geom_line(aes(y = norm_Net_Loss, color = "Net Loss"), size = 1, linetype = "dashed") +
+  scale_y_continuous(
+    name = "Normalized Value",
+    sec.axis = sec_axis(~ . * max_loss, name = "Net Loss (in Hectares)")
+  ) +
+  scale_color_manual(values = c("24S-EQU" = "blue", "Net Loss" = "green")) +
+  labs(title = "Normalized 24S-EQU Temperature Anomaly and Net Loss Over Time",
+       subtitle = "Comparing Normalized 24S-EQU Temperature Anomaly and Net Loss",
        x = "Year",
        color = "Legend") +
   theme_minimal() +
@@ -136,4 +186,12 @@ ggplot(data = merged_data, aes(x = year)) +
 ```
 
 
+
+```{r}
+# Berechne die Korrelation zwischen Net_Loss und 24S-EQU
+correlation <- cor(merged_data$Net_Loss, merged_data$`24S-EQU`, use = "complete.obs")
+correlation
+```
+TODO: Interpret the results of the correlation test. 
+Is there no significant correlation between temperature anomaly in the 24S-EQU region and net loss in Brazil over time.
 
