@@ -1,0 +1,139 @@
+---
+title: "Deforestation_Brazil"
+output: html_document
+date: "2025-01-16"
+---
+
+Daten werden eingelesen
+
+```{r setup, include=FALSE}
+# Installiere und lade benötigte Pakete
+if (!require(tidyverse)) install.packages("tidyverse")
+if (!require(tidytuesdayR)) install.packages("tidytuesdayR")
+if (!require(readr)) install.packages("readr")
+
+# Deforstation Data einlesen mit tidytuesdayR
+# Installiere und lade das tidytuesdayR-Paket
+tuesdata <- tidytuesdayR::tt_load('2021-04-06')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 15)
+
+forest_change <- tuesdata$forest_change
+
+# Alternativ manuell lesen
+forest <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-04-06/forest.csv')
+forest_area <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-04-06/forest_area.csv')
+brazil_loss <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-04-06/brazil_loss.csv')
+soybean_use <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-04-06/soybean_use.csv')
+vegetable_oil <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2021/2021-04-06/vegetable_oil.csv')
+
+# Temperaturdaten mit tidytuesdayR einlesen
+tuesdata <- tidytuesdayR::tt_load('2023-07-11')
+tuesdata <- tidytuesdayR::tt_load(2023, week = 28)
+
+global_temps <- tuesdata$global_temps
+nh_temps <- tuesdata$nh_temps
+sh_temps <- tuesdata$sh_temps
+zonann_temps <- tuesdata$zonann_temps
+
+# Alternativ manuell lesen
+global_temps <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2023/2023-07-11/global_temps.csv')
+nh_temps <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2023/2023-07-11/nh_temps.csv')
+sh_temps <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2023/2023-07-11/sh_temps.csv')
+zonann_temps <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2023/2023-07-11/zonann_temps.csv')
+
+
+
+# Temperatur Data einlesen
+#temperature_url <- "https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data#/2023/2023-07-11/global_temps.csv"
+#temperature_data <- read_csv(temperature_url)
+
+```
+
+
+Daten werden jetzt bearbeitet 
+
+```{r}
+brazil_loss <- brazil_loss %>%
+  rowwise() %>%
+  mutate(Net_Loss = sum(across(!c(entity, code, year)), na.rm = TRUE)) %>%
+  ungroup()
+
+brazil_loss_net <- brazil_loss %>%
+  select(year, Net_Loss, entity)
+```
+
+```{r}
+# Plot der Abholzung in Brasilien über die Jahre
+ggplot(brazil_loss, aes(x = year, y = Net_Loss)) +
+  geom_line(color = "darkgreen") +
+  labs(title = "Abholzung in Brasilien über die Jahre",
+       x = "Jahr",
+       y = "Abholzung (in Hektar)") +
+  theme_minimal()
+```
+
+
+
+```{r setup, include=FALSE}
+# Selektiere die Spalten "year" und "24S-EQU" aus der zonann_temps Tabelle
+temps <- zonann_temps %>%
+  select(Year, `24S-EQU`, Glob)
+# Rename the column "Year" to "year" in temps
+temps <- temps %>%
+  rename(year = Year)
+# Merge temps and brazil_loss using the column Year
+merged_data <- inner_join(temps, brazil_loss_net, by = "year")
+merged_data
+```
+
+```{r}
+library(ggplot2)
+
+# Plot the columns 24S-EQU and Glob against year
+ggplot(data = merged_data, aes(x = year)) +
+  geom_line(aes(y = `24S-EQU`, color = "24S-EQU"), size = 1) +
+  geom_line(aes(y = Glob, color = "Glob"), size = 1, linetype = "dashed") +
+  scale_color_manual(values = c("24S-EQU" = "blue", "Glob" = "red")) +
+  labs(title = "Temperature Changes Over Time",
+       subtitle = "Comparing 24S-EQU and Global Temperature Anomalies",
+       x = "Year",
+       y = "Temperature Anomaly (°C)",
+       color = "Legend") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 12),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+```
+
+```{r}
+# Plot the columns 24S-EQU and Net_Loss against year with two y-axes
+ggplot(data = merged_data, aes(x = year)) +
+  geom_line(aes(y = `24S-EQU`, color = "24S-EQU"), size = 1) +
+  geom_line(aes(y = Net_Loss / 1000, color = "Net_Loss"), size = 1, linetype = "dashed") + # Scale Net_Loss for better visualization
+  scale_y_continuous(
+    name = "Temperature Anomaly (°C)",
+    sec.axis = sec_axis(~ . * 1000, name = "Net Loss (in Hectares)")
+  ) +
+  scale_color_manual(values = c("24S-EQU" = "blue", "Net_Loss" = "green")) +
+  labs(title = "24S-EQU Temperature Anomaly and Net Loss Over Time",
+       subtitle = "Comparing 24S-EQU Temperature Anomaly and Net Loss",
+       x = "Year",
+       color = "Legend") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 12),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+```
+
+
+
