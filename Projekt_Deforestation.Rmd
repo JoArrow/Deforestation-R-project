@@ -4,12 +4,10 @@ output: html_document
 date: "2025-01-16"
 ---
 
-# Einführender Text
-# TODO: Explorative Analyse zu Abholzung
-# TODO: Explorative Analyse zu Temperaturdaten
-# Hypothesen aufstellen und testen
-# - Korrelation von Abholzung in Brasilien - Temperaturdaten
-# - ?
+Hypothesen:
+- Abholzung in Brasilien korreliert mit klima im Breitengradenintervall
+- TODO: Brandrodung in Brasilien nimmt Anteilig zum Netloss zum -> Barchart mit Anteilen
+- 
 
 Daten werden eingelesen
 ```{r}
@@ -71,6 +69,78 @@ brazil_loss <- brazil_loss %>%
 
 brazil_loss_net <- brazil_loss %>%
   select(year, Net_Loss, entity)
+```
+
+```{r}
+# Calculate the proportion of each deforestation category relative to the total deforestation
+brazil_loss_long <- brazil_loss_long %>%
+  group_by(year, category) %>%
+  summarise(total_value = sum(value, na.rm = TRUE)) %>%
+  mutate(proportion = total_value / sum(total_value, na.rm = TRUE))
+
+# Plot the proportion of each deforestation category over time using a line plot
+ggplot(brazil_loss_long, aes(x = year, y = proportion, color = category)) +
+  geom_line(size = 1) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Proportion of Deforestation Categories Over Time",
+       x = "Year",
+       y = "Proportion of Total Deforestation",
+       color = "Category") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+```
+
+```{r}
+# Create a barchart with stacked bars for each year
+brazil_loss_long <- brazil_loss %>%
+  pivot_longer(cols = -c(entity, code, year, Net_Loss), names_to = "category", values_to = "value")
+
+ggplot(brazil_loss_long, aes(x = year, y = value, fill = category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Deforestation Categories Over the Years",
+       x = "Year",
+       y = "Deforestation (in Hectares)",
+       fill = "Category") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+```
+
+
+
+```{r}
+# Calculate the proportion of each deforestation category relative to the total deforestation
+brazil_loss_long <- brazil_loss_long %>%
+  group_by(year) %>%
+  mutate(proportion = value / sum(value, na.rm = TRUE))
+
+# Plot the proportion of each deforestation category over time
+ggplot(brazil_loss_long, aes(x = year, y = proportion, fill = category)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Proportion of Deforestation Categories Over Time",
+       x = "Year",
+       y = "Proportion of Total Deforestation",
+       fill = "Category") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
 ```
 
 ```{r}
@@ -194,3 +264,4 @@ correlation_pearson
 ```
 Based on the data, we can not conclude that there is a significant correlation between the temperature anomaly in the 24S-EQU region and net loss in Brazil over time. 
 This lack of significant correlation might be due to the limited temporal scope of the data. Expanding the temporal scope or considering additional factors might provide more insights into the relationship between these variables.
+# TODO: argumentieren, dass wir hier Temperaturen von Breitengradenintervall anschauen
