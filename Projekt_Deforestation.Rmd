@@ -32,7 +32,7 @@ library(ggplot2)
 library(scales)
 ```
 
-```{r setup, include=FALSE}
+```{r}
 # Installiere und lade benötigte Pakete
 if (!require(tidyverse)) install.packages("tidyverse")
 if (!require(tidytuesdayR)) install.packages("tidytuesdayR")
@@ -89,6 +89,27 @@ brazil_loss_net <- brazil_loss %>%
 ```
 
 ```{r}
+# Create a barchart with stacked bars for each year
+brazil_loss_long <- brazil_loss %>%
+  pivot_longer(cols = -c(entity, code, year, Net_Loss), names_to = "category", values_to = "value")
+
+ggplot(brazil_loss_long, aes(x = year, y = value, fill = category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Deforestation Categories Over the Years",
+       x = "Year",
+       y = "Deforestation (in Hectares)",
+       fill = "Category") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+```
+
+```{r}
 # Calculate the proportion of each deforestation category relative to the total deforestation
 brazil_loss_long <- brazil_loss_long %>%
   group_by(year, category) %>%
@@ -113,26 +134,7 @@ ggplot(brazil_loss_long, aes(x = year, y = proportion, color = category)) +
   )
 ```
 
-```{r}
-# Create a barchart with stacked bars for each year
-brazil_loss_long <- brazil_loss %>%
-  pivot_longer(cols = -c(entity, code, year, Net_Loss), names_to = "category", values_to = "value")
 
-ggplot(brazil_loss_long, aes(x = year, y = value, fill = category)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Deforestation Categories Over the Years",
-       x = "Year",
-       y = "Deforestation (in Hectares)",
-       fill = "Category") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
-  )
-```
 
 
 
@@ -140,7 +142,7 @@ ggplot(brazil_loss_long, aes(x = year, y = value, fill = category)) +
 # Calculate the proportion of each deforestation category relative to the total deforestation
 brazil_loss_long <- brazil_loss_long %>%
   group_by(year) %>%
-  mutate(proportion = value / sum(value, na.rm = TRUE))
+  mutate(proportion = total_value / sum(total_value, na.rm = TRUE))
 
 # Plot the proportion of each deforestation category over time
 ggplot(brazil_loss_long, aes(x = year, y = proportion, fill = category)) +
@@ -173,7 +175,7 @@ ggplot(brazil_loss, aes(x = year, y = Net_Loss)) +
 
 
 
-```{r setup, include=FALSE}
+```{r}
 # Selektiere die Spalten "year" und "24S-EQU" aus der zonann_temps Tabelle
 temps <- zonann_temps %>%
   select(Year, `24S-EQU`, Glob)
