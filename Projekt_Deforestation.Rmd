@@ -32,6 +32,7 @@ Zunächst sollen beide Datensätze in R eingelesen werden:
 ```{r}
 library(ggplot2)
 library(scales)
+library(broom)
 ```
 
 ```{r}
@@ -133,7 +134,10 @@ ggplot(brazil_loss, aes(x = year, y = Net_Loss)) +
   theme_minimal()
 ```
 
+# Überprüfung des Zusammenhangs zwischen Verlust an Waldfläche in Brasilien und der globalen Temperatur
 
+Für die Analyse, wird im folgenden der Datensatz der Abholzung mit dem Datensatz der globalen Temperaturen in einen gemeinsamen Kontext gesetzt. 
+Zunächst werden die beiden Datensätze zusammengeführt ("inner.join()"-Befehl).
 
 
 ```{r}
@@ -148,8 +152,9 @@ merged_data <- inner_join(temps, brazil_loss_net, by = "year")
 merged_data
 ```
 
-Als nächstes visualisieren wir wie sich verhält die Temperatur in der Region 24S-EQU im Vergleich zur globalen Temperaturanomalie im Laufe der Zeit verhält. Das veranschaulichen wir mittels eines Liniendiagramms.
-
+Als nächstes visualisieren wir wie sich die Temperatur in der Region von der 24° südlichen Breite (24S) bis zum Äquator (EQU) im Vergleich zur globalen Temperaturanomalie im Laufe der Zeit verhält. Das veranschaulichen wir mittels eines Liniendiagramms.
+In diesem Breitengradintervall ist auch Brasilien beziehungsweise der Regenwald lokalisiert.
+Da der Datensatz die Temperaturen nicht nach Ländern gliedert, sondern nach Breitengradbereichen, wird diese Vorgehensweise verwendet.
 ```{r}
 library(ggplot2)
 
@@ -167,15 +172,12 @@ ggplot(data = merged_data, aes(x = year)) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5, size = 12),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
   )
 ```
 
-# Plot the columns 24S-EQU and Net_Loss against year with two y-axes
 
+# Plot the columns 24S-EQU and Net_Loss against year with two y-axes
+Zum Vergleich der Entwicklungen der Waldfläche und der Temperaturen über der Zeit, werden beide Größen in einem Lininediagramm mit zwei Skalen auf der y-Achse dargestellt.
 ```{r}
 library(ggplot2)
 library(scales)
@@ -183,10 +185,10 @@ library(scales)
 # Create a plot with two y-axes
 ggplot(data = merged_data, aes(x = year)) +
   geom_line(aes(y = `24S-EQU`, color = "24S-EQU"), size = 1) +
-  geom_line(aes(y = Net_Loss / 1000000, color = "Net_Loss"), size = 1, linetype = "dashed") +
+  geom_line(aes(y = Net_Loss / 5000000, color = "Net_Loss"), size = 1, linetype = "dashed") +
   scale_y_continuous(
     name = "Temperature in 24S-EQU (°C)",
-    sec.axis = sec_axis(~ . * 1000000, name = "Net Loss (in Hectares)")
+    sec.axis = sec_axis(~ . * 5000000, name = "Net Loss (in Hectares)")
   ) +
   scale_color_manual(values = c("24S-EQU" = "blue", "Net_Loss" = "brown")) +
   labs(title = "24S-EQU Temperature Anomaly and Net Loss Over Time",
@@ -202,50 +204,48 @@ ggplot(data = merged_data, aes(x = year)) +
   )
 ```
 
-```{r}
-max_temp <- max(merged_data$`24S-EQU`, na.rm = TRUE)
-max_loss <- max(merged_data$Net_Loss, na.rm = TRUE)
-
-merged_data <- merged_data %>%
-  mutate(
-    norm_24S_EQU = `24S-EQU` / max_temp,
-    norm_Net_Loss = Net_Loss / max_loss
-  )
-
-ggplot(data = merged_data, aes(x = year)) +
-  geom_line(aes(y = norm_24S_EQU, color = "24S-EQU"), size = 1) +
-  geom_line(aes(y = norm_Net_Loss, color = "Net Loss"), size = 1, linetype = "dashed") +
-  scale_y_continuous(
-    name = "Normalized Value",
-    sec.axis = sec_axis(~ . * max_loss, name = "Net Loss (in Hectares)")
-  ) +
-  scale_color_manual(values = c("24S-EQU" = "blue", "Net Loss" = "green")) +
-  labs(title = "Normalized 24S-EQU Temperature Anomaly and Net Loss Over Time",
-       subtitle = "Comparing Normalized 24S-EQU Temperature Anomaly and Net Loss",
-       x = "Year",
-       color = "Legend") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    plot.subtitle = element_text(hjust = 0.5, size = 12),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
-  )
-```
-
-
+Für die statistische Überprüfung der Hypothese, wird die Korrelation zwischen der Abholzung in Brasilien und der Temperaturabweichung im Breitengradintervall 24S-EQU berechnet. 
 
 ```{r}
 # Berechne die Korrelation zwischen Net_Loss und 24S-EQU
-correlation_pearson <- cor(merged_data$Net_Loss, merged_data$`24S-EQU`, method = "pearson", use = "complete.obs")
+correlation_pearson <- cor.test(merged_data$Net_Loss, merged_data$`24S-EQU`, method = "pearson", use = "complete.obs")
 correlation_pearson
+correlation_test <- cor.test(merged_data$Net_Loss, merged_data$`24S-EQU`, method = "pearson", use = "complete.obs")
+correlation_table <- tidy(correlation_test)
+print(correlation_table)
 ```
-Based on the data, we can not conclude that there is a significant correlation between the temperature anomaly in the 24S-EQU region and net loss in Brazil over time. 
-This lack of significant correlation might be due to the limited temporal scope of the data. Expanding the temporal scope or considering additional factors might provide more insights into the relationship between these variables.
-# TODO: argumentieren, dass wir hier Temperaturen von Breitengradenintervall anschauen
-Das Breitengradintervall 24° Süd (24S) bis zum Äquator (EQU) wurde herangezogen, da dieses Breitengradintervall geographisch am ehesten mit Brasilien in Verbindung gebracht werden kann. 
-Die schwache Korrelation, sowie die hohe Irrtumswahrscheinlichkeit $\mathrm{p} \approx 40\,\%$ für einen potentiellen Zusammenhang zwischen dem Gesamtverlust an Waldfläche in Brasilien und der Temperaturabweichung im untersuchten Breitengradintervall lassen sich dadurch erklären, dass viele andere Landflächen, wie zum Beispiel Afrika, ebenfalls auf diesem Bretiengradintervall liegen. Dadurch lassen sich potentielle Auswirkungen auf die Temeperaturabweichung im untersuchten Breitengradintervall entweder gar nicht oder eventuell sehr eingeschränkt isoliert auf den Verlust von Waldfläche in Brasilien zurückführen. Die Atmosphäre der Erde ist ein großes und komplexes System, welches durch eine große Quantität an Faktoren beeinflusst wird. 
-Eine weiterer Erklärungsansatz für die oben genannten geringen statistischen Signinfikanzen könnte der untersuchte Zeitraum darstellen. Für eine genauere Untersuchung sollte ein weitaus größerer Zeitraum betrachtet werden, da sich klimatische Veränderungen erst nach mehreren Jahrzehnten messbar erfasst werden können.
+Diese Auswertuung wird auch für den Zusammenhang zwischen der Abholzung und der globalen Temperatur durchgeführt.
+```{r}
+# Berechne die Korrelation zwischen Net_Loss und 24S-EQU
+correlation_pearson <- cor.test(merged_data$Net_Loss, merged_data$Glob, method = "pearson", use = "complete.obs")
+correlation_pearson
+correlation_test <- cor.test(merged_data$Net_Loss, merged_data$Glob, method = "pearson", use = "complete.obs")
+correlation_table <- tidy(correlation_test)
+print(correlation_table)
+```
+
+
+# Fazit und Ausblick
+
+
+Anhand der Daten können wir nicht feststellen, dass es eine signifikante Korrelation zwischen der Temperaturanomalie in der Region 24S-EQU und dem Nettoverlust in Brasilien im Laufe der Zeit gibt. 
+
+Das Fehlen einer signifikanten Korrelation könnte auf den begrenzten zeitlichen Umfang der Daten zurückzuführen sein. Eine Ausweitung des zeitlichen Umfangs oder die Berücksichtigung zusätzlicher Faktoren könnte weitere Erkenntnisse über die Beziehung zwischen diesen Variablen liefern.
+
+Die schwache Korrelation, sowie die hohe Irrtumswahrscheinlichkeit $\mathrm{p} \approx 40\,\%$ für einen potentiellen Zusammenhang zwischen dem Gesamtverlust an Waldfläche in Brasilien und der Temperaturabweichung im untersuchten Breitengradintervall lassen sich dadurch erklären, dass viele andere Landflächen, wie zum Beispiel Afrika, ebenfalls auf diesem Bretiengradintervall liegen. 
+
+Dadurch lassen sich potentielle Auswirkungen auf die Temeperaturabweichung im untersuchten Breitengradintervall entweder gar nicht oder eventuell sehr eingeschränkt isoliert auf den Verlust von Waldfläche in Brasilien zurückführen.
+
+Analog lässt sich auch der schwache Zusammenhang zwischen Abholzung in Brasilien und der globalen Temperatur erkennen:
+
+Die Atmosphäre der Erde ist ein großes und komplexes System, welches durch eine große Quantität an Faktoren beeinflusst wird. Entsprechend fließt der ökologische Fußabdruck vieler Länder in diese Messungen mit ein.
+Eine weiterer Erklärungsansatz für die oben genannten geringen statistischen Signinfikanzen könnte der untersuchte Zeitraum darstellen. 
+
+Für eine genauere Untersuchung sollte ein weitaus größerer Zeitraum betrachtet werden, da sich klimatische Veränderungen erst nach mehreren Jahrzehnten messbar erfasst werden können.
+
 Neben dem zetilichen Faktor könnte auch die geographische Inhomogenität der Temperaturabweichung für den schwachen Zusammenhang verantwortlich sein. Die Äquator nahen Gebiete der Erde erwärmen sich eventuell weniger stark als die polareren Gebiete. 
+Des Weiteren ist zu erkennen, dass die Brandrodung in Brasilien über die Jahre zurückgegangen ist. Eventuell ist die Notwendigkeit der Bereitstellung großer Flächen für Agrikulturelle Nutzung durch Brandrodung weniger relevant, je länger die Abholzung andauert.
+
+Zusammenfassend können wir festhalten, dass unsere Hypothese, höchstens eingeschränkt gültig ist.
+
+
