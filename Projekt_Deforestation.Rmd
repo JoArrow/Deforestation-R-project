@@ -53,7 +53,7 @@ zonann_temps <- tuesdata$zonann_temps
 # Berechnung des Netto-Waldverlusts in Brasilien
 Die brasilianischen Abholzungsdaten werden so aufbereitet, dass der Netto-Waldverlust für jedes Jahr berechnet wird.
 ```{r}
-brazil_loss <- brazil_loss %>%
+brazil_loss <- brazil_loss %>% 
   rowwise() %>%
   mutate(Net_Loss = sum(across(!c(entity, code, year)), na.rm = TRUE)) %>%
   ungroup()
@@ -63,7 +63,7 @@ brazil_loss_net <- brazil_loss %>%
 ```
 
 # Visualisierung: Abholzungskategorien über die Jahre
-Ein gestapeltes Balkendiagramm zeigt die Anteile der Abholzungskategorien in Brasilien im Zeitverlauf.
+Die Anteile der Abholzungskategorien in Brasilien im Zeitverlauf werden als Balkendiagramm dargestellt.
 
 ```{r}
 # Create a barchart with stacked bars for each year
@@ -78,14 +78,10 @@ ggplot(brazil_loss_long, aes(x = year, y = value, fill = category)) +
        fill = "Category") +
   theme_minimal() +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold")
   )
 ```
-
+Zur Darstellung des zeitlichen Verlaufs der jeweiligen Anteile, sind die Daten als Liniendiagramm visualisiert.
 ```{r}
 # Calculate the proportion of each deforestation category relative to the total deforestation
 brazil_loss_long <- brazil_loss_long %>%
@@ -97,24 +93,16 @@ brazil_loss_long <- brazil_loss_long %>%
 ggplot(brazil_loss_long, aes(x = year, y = proportion, color = category)) +
   geom_line(size = 1) +
   scale_y_continuous(labels = scales::percent) +
-  labs(title = "Proportion of Deforestation Categories Over Time",
+  labs(title = "  Proportion of Deforestation Categories Over Time",
        x = "Year",
        y = "Proportion of Total Deforestation",
        color = "Category") +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
   )
 ```
-
-
-
-
-
+Für einen besseren Vergleich der Anteile im Balkendiagramm, werden die Anteile auf den Gesamtverlust ("Net_Loss") bezogen und in Prozent dargestellt.
 ```{r}
 # Calculate the proportion of each deforestation category relative to the total deforestation
 brazil_loss_long <- brazil_loss_long %>%
@@ -125,20 +113,16 @@ brazil_loss_long <- brazil_loss_long %>%
 ggplot(brazil_loss_long, aes(x = year, y = proportion, fill = category)) +
   geom_bar(stat = "identity", position = "fill") +
   scale_y_continuous(labels = scales::percent) +
-  labs(title = "Proportion of Deforestation Categories Over Time",
+  labs(title = "  Proportion of Deforestation Categories Over Time",
        x = "Year",
        y = "Proportion of Total Deforestation",
        fill = "Category") +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
   )
 ```
-
+Der folgende Plot zeigt den Gesamtverlust an Waldfläche in Brasilien im betrachteten Zeitraum.
 ```{r}
 # Plot der Abholzung in Brasilien über die Jahre
 ggplot(brazil_loss, aes(x = year, y = Net_Loss)) +
