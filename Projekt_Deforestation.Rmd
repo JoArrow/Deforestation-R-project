@@ -5,16 +5,18 @@ date: "2025-01-16"
 authors: uhrpv, ugfnr, uctiw
 ---
 
+TODO: 
 Hypothesen:
 - Abholzung in Brasilien korreliert mit klima im Breitengradenintervall
 - TODO: Brandrodung in Brasilien nimmt Anteilig zum Netloss zum -> Barchart mit Anteilen
 - 
 
+# Einführung
 In diesem R Datenanalyse - Projekt wurden die Datensätze "Global Deforestation" und 
 "Global Surface Temperatures" betrachtet. Beide sind im Github Repository "tidytuesday" zugänglich.  
 Hier der Link zu beiden Datensätzen: 
-https://github.com/rfordatascience/tidytuesday/tree/main/data/2021/2021-04-06
-https://github.com/rfordatascience/tidytuesday/blob/main/data/2023/2023-07-11/readme.md
+- **https://github.com/rfordatascience/tidytuesday/tree/main/data/2021/2021-04-06
+- **https://github.com/rfordatascience/tidytuesday/blob/main/data/2023/2023-07-11/readme.md
 
 Zunächst wird das "Deforestation" Datenpaket betrachtet. Dieser thematisiert die Abholzung von Waldflächen national und international während der Jahre 2001 - 2013. Die dabei in Brasilien abfallenden Abholzungsflächen werden separat in der Datei "brazilian_loss.csv" angebenen. Diese wurde im Zuge des Projekts besonders intensiv analysiert, da der Regenwald sich zu großen Anteilen durch Brasilien erstreckt. Er wird umgangssprachlich oft als "Lunge der Welt" bezeichnet, und viele Umweltwissenschaftler*innen kritisieren seine Abholzung scharf, da dadurch ein wichtiger Faktor in der Stabilisierung des globalen Klimas verloren gehen soll. 
 Um diese Hypothese zu überprüfen, wird neben "Deforestation" auch das Datenpaket "Global Surface Temperatures" betrachtet. Dieses gibt die Temperaturänderungen weltweit und in verschiedenen Breitengraden von 1880 bis zu den letzten Jahren an und bezieht die Angabe der Änderung auf ein Mittel der globalen Temperaturen von 1951 - 1980. 
@@ -26,6 +28,7 @@ Neben allen anderen Gründen der Abholzung in Brasilien ist die Brandrodung wege
 
 Dieses Dokument soll einen Überblick darüber geben, auf welche Art und Weise die besagten Datensätze in R analysiert wurden und welche Schlüsse bezüglich der genannten Hypothesen gezogen wurden. 
 
+# Einlesen der Daten
 Zunächst sollen beide Datensätze in R eingelesen werden: 
 ```{r}
 library(ggplot2)
@@ -75,9 +78,8 @@ zonann_temps <- readr::read_csv('https://raw.githubusercontent.com/rfordatascien
 
 ```
 
-
-Daten werden jetzt bearbeitet 
-
+# Berechnung des Netto-Waldverlusts in Brasilien
+Die brasilianischen Abholzungsdaten werden so aufbereitet, dass der Netto-Waldverlust für jedes Jahr berechnet wird.
 ```{r}
 brazil_loss <- brazil_loss %>%
   rowwise() %>%
@@ -87,6 +89,9 @@ brazil_loss <- brazil_loss %>%
 brazil_loss_net <- brazil_loss %>%
   select(year, Net_Loss, entity)
 ```
+
+# Visualisierung: Abholzungskategorien über die Jahre
+Ein gestapeltes Balkendiagramm zeigt die Anteile der Abholzungskategorien in Brasilien im Zeitverlauf.
 
 ```{r}
 # Create a barchart with stacked bars for each year
@@ -166,9 +171,9 @@ ggplot(brazil_loss_long, aes(x = year, y = proportion, fill = category)) +
 # Plot der Abholzung in Brasilien über die Jahre
 ggplot(brazil_loss, aes(x = year, y = Net_Loss)) +
   geom_line(color = "darkgreen") +
-  labs(title = "Abholzung in Brasilien über die Jahre",
-       x = "Jahr",
-       y = "Abholzung (in Hektar)") +
+  labs(title = "Deforestation in Brazil over the years",
+       x = "Year",
+       y = "Deforestation (in hectares)") +
   theme_minimal()
 ```
 
@@ -187,7 +192,7 @@ merged_data <- inner_join(temps, brazil_loss_net, by = "year")
 merged_data
 ```
 
-How does the temperature anomaly in the 24S-EQU region compare to the global temperature anomaly over time? Let's visualize this comparison using a line plot.
+Als nächstes visualisieren wir wie sich verhält die Temperatur in der Region 24S-EQU im Vergleich zur globalen Temperaturanomalie im Laufe der Zeit verhält. Das veranschaulichen wir mittels eines Liniendiagramms.
 
 ```{r}
 library(ggplot2)
